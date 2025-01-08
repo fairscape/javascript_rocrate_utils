@@ -1,0 +1,20 @@
+{
+  "name": "@fairscape/utils",
+  "version": "1.0.0",
+  "description": "Shared utilities for Fairscape applications",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "fairscape",
+    "rocrate"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "uuid": "^9.0.1",
+    "path": "^0.12.7",
+    "fs": "0.0.1-security"
+  }
+}
