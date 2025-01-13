@@ -1,7 +1,6 @@
 {
   "name": "@fairscape/utils",
   "version": "1.0.0",
-  "type": "module",
   "description": "Shared utilities for Fairscape applications",
   "main": "src/index.js",
   "scripts": {

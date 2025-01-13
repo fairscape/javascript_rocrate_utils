@@ -105,7 +105,7 @@ function generateDataset({
     }
   }
 
-  return datasetMetadata; // Return the metadata object directly, not wrapped in a Dataset class
+  return datasetMetadata;
 }
 
 module.exports = {
