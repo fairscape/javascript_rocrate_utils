@@ -8,7 +8,7 @@ const DEFAULT_CONTEXT = {
   EVI: "https://w3id.org/EVI#",
 };
 
-const NAAN = "99999"; // Replace with your actual NAAN
+const NAAN = "59852";
 
 function generateDatetimeSquid() {
   return uuidv4().split("-")[0];
@@ -23,9 +23,8 @@ function generateROCrate({
   keywords,
   organizationName = null,
   projectName = null,
-  packageType = null, // Add packageType parameter
+  packageType = null,
 }) {
-  console.log("projectName in models: ", projectName);
   if (!name) {
     throw new Error("Name is required for ROCrate generation");
   }
@@ -35,31 +34,28 @@ function generateROCrate({
     guid = `ark:${NAAN}/rocrate-${name.toLowerCase().replace(" ", "-")}-${sq}`;
   }
 
-  let roCrateInstanceMetadata = {
+  // Create the root dataset entity
+  const rootDataset = {
     "@id": guid,
-    "@context": {
-      "@vocab": "https://schema.org/",
-      EVI: "https://w3id.org/EVI#",
-    },
-    "@type": "https://w3id.org/EVI#ROCrate",
+    "@type": ["Dataset", "https://w3id.org/EVI#ROCrate"],
     name: name,
-    isPartOf: [],
     keywords: keywords,
     description: description,
     author: author,
-    "@graph": [],
   };
 
-  // Add packageType to the metadata if it's provided
+  // Add packageType to the root dataset if provided
   if (packageType) {
-    roCrateInstanceMetadata.packageType = packageType;
+    rootDataset.packageType = packageType;
   }
 
+  // Create organization and project entities if needed
+  const isPartOf = [];
   if (organizationName) {
     const organizationGuid = `ark:${NAAN}/organization-${organizationName
       .toLowerCase()
       .replace(" ", "-")}-${generateDatetimeSquid()}`;
-    roCrateInstanceMetadata.isPartOf.push({
+    isPartOf.push({
       "@id": organizationGuid,
       "@type": "Organization",
       name: organizationName,
@@ -70,12 +66,31 @@ function generateROCrate({
     const projectGuid = `ark:${NAAN}/project-${projectName
       .toLowerCase()
       .replace(" ", "-")}-${generateDatetimeSquid()}`;
-    roCrateInstanceMetadata.isPartOf.push({
+    isPartOf.push({
       "@id": projectGuid,
       "@type": "Project",
       name: projectName,
     });
   }
+
+  if (isPartOf.length > 0) {
+    rootDataset.isPartOf = isPartOf;
+  }
+
+  // Create the metadata descriptor
+  const metadataDescriptor = {
+    "@id": "ro-crate-metadata.json",
+    "@type": "CreativeWork",
+    conformsTo: { "@id": "https://w3id.org/ro/crate/1.2-DRAFT" },
+    about: { "@id": guid },
+  };
+
+  // Create the full RO-Crate structure
+  const roCrateInstanceMetadata = {
+    "@context": DEFAULT_CONTEXT,
+    "@graph": [metadataDescriptor, rootDataset],
+    packageType: packageType,
+  };
 
   let roCrateMetadataPath;
   if (cratePath.includes("ro-crate-metadata.json")) {
@@ -105,7 +120,6 @@ class ROCrate {
     path
   ) {
     this.guid = null;
-    this.metadataType = "https://w3id.org/EVI#ROCrate";
     this.name = name;
     this.description = description;
     this.author = author;
@@ -113,7 +127,6 @@ class ROCrate {
     this.projectName = projectName;
     this.organizationName = organizationName;
     this.path = path;
-    this.metadataGraph = [];
   }
 
   generateGuid() {
@@ -134,22 +147,22 @@ class ROCrate {
     const roCrateMetadataPath = path.join(this.path, "ro-crate-metadata.json");
     this.generateGuid();
 
-    const roCrateMetadata = {
+    // Create root dataset
+    const rootDataset = {
       "@id": this.guid,
-      "@context": DEFAULT_CONTEXT,
-      "@type": "EVI:Dataset",
+      "@type": ["Dataset", "https://w3id.org/EVI#ROCrate"],
       name: this.name,
       description: this.description,
       keywords: this.keywords,
-      isPartOf: [],
-      "@graph": [],
     };
 
+    // Add organization and project if specified
+    const isPartOf = [];
     if (this.organizationName) {
       const organizationGuid = `ark:${NAAN}/organization-${this.organizationName
         .toLowerCase()
         .replace(" ", "-")}-${generateDatetimeSquid()}`;
-      roCrateMetadata.isPartOf.push({
+      isPartOf.push({
         "@id": organizationGuid,
         "@type": "Organization",
         name: this.organizationName,
@@ -160,12 +173,30 @@ class ROCrate {
       const projectGuid = `ark:${NAAN}/project-${this.projectName
         .toLowerCase()
         .replace(" ", "-")}-${generateDatetimeSquid()}`;
-      roCrateMetadata.isPartOf.push({
+      isPartOf.push({
         "@id": projectGuid,
         "@type": "Project",
         name: this.projectName,
       });
     }
+
+    if (isPartOf.length > 0) {
+      rootDataset.isPartOf = isPartOf;
+    }
+
+    // Create metadata descriptor
+    const metadataDescriptor = {
+      "@id": "ro-crate-metadata.json",
+      "@type": "CreativeWork",
+      conformsTo: { "@id": "https://w3id.org/ro/crate/1.2-DRAFT" },
+      about: { "@id": this.guid },
+    };
+
+    const roCrateMetadata = {
+      "@context": DEFAULT_CONTEXT,
+      "@graph": [metadataDescriptor, rootDataset],
+      packageType: packageType,
+    };
 
     fs.writeFileSync(
       roCrateMetadataPath,
@@ -173,26 +204,24 @@ class ROCrate {
     );
   }
 
-  copyObject(sourceFilepath, destinationFilepath) {
-    if (!sourceFilepath) {
-      throw new Error("source path is None");
-    }
-
-    if (!destinationFilepath) {
-      throw new Error("destination path is None");
-    }
-
-    if (!fs.existsSync(sourceFilepath)) {
-      throw new Error(`sourcePath: ${sourceFilepath} Doesn't Exist`);
-    }
-
-    fs.copyFileSync(sourceFilepath, destinationFilepath);
-  }
-
   registerObject(model) {
     const metadataPath = path.join(this.path, "ro-crate-metadata.json");
     const roCrateMetadata = JSON.parse(fs.readFileSync(metadataPath, "utf8"));
+
+    // Add the new entity to the graph
     roCrateMetadata["@graph"].push(model);
+
+    // Find the root dataset (second element in @graph after metadata descriptor)
+    const rootDataset = roCrateMetadata["@graph"][1];
+
+    // Initialize hasPart if it doesn't exist
+    if (!rootDataset.hasPart) {
+      rootDataset.hasPart = [];
+    }
+
+    // Add reference to the new entity
+    rootDataset.hasPart.push({ "@id": model["@id"] });
+
     fs.writeFileSync(metadataPath, JSON.stringify(roCrateMetadata, null, 2));
   }
 
@@ -209,11 +238,16 @@ class ROCrate {
   }
 
   listContents() {
-    // In JavaScript, we might want to return an array of objects instead of using PrettyTable
-    return this.metadataGraph.map((element) => ({
+    const metadataPath = path.join(this.path, "ro-crate-metadata.json");
+    const roCrateMetadata = JSON.parse(fs.readFileSync(metadataPath, "utf8"));
+
+    // Skip the metadata descriptor (first element)
+    return roCrateMetadata["@graph"].slice(1).map((element) => ({
       ro_crate: "*",
-      id: element.guid,
-      type: element.type,
+      id: element["@id"],
+      type: Array.isArray(element["@type"])
+        ? element["@type"].join(", ")
+        : element["@type"],
       name: element.name,
     }));
   }
@@ -224,8 +258,7 @@ function readROCrateMetadata(cratePath) {
     ? cratePath
     : path.join(cratePath, "ro-crate-metadata.json");
 
-  const crateMetadata = JSON.parse(fs.readFileSync(metadataCratePath, "utf8"));
-  return crateMetadata;
+  return JSON.parse(fs.readFileSync(metadataCratePath, "utf8"));
 }
 
 function appendCrate(cratePath, elements) {
@@ -238,27 +271,23 @@ function appendCrate(cratePath, elements) {
   }
 
   const roCrateMetadata = JSON.parse(fs.readFileSync(cratePath, "utf8"));
+
+  // Find the root dataset (second element in @graph after metadata descriptor)
+  const rootDataset = roCrateMetadata["@graph"][1];
+
+  // Initialize hasPart if it doesn't exist
+  if (!rootDataset.hasPart) {
+    rootDataset.hasPart = [];
+  }
+
   elements.forEach((element) => {
+    // Add the element to the graph
     roCrateMetadata["@graph"].push(element);
+    // Add reference to the element in root dataset's hasPart
+    rootDataset.hasPart.push({ "@id": element["@id"] });
   });
 
   fs.writeFileSync(cratePath, JSON.stringify(roCrateMetadata, null, 2));
-}
-
-function copyToROCrate(sourceFilepath, destinationFilepath) {
-  if (!sourceFilepath) {
-    throw new Error("source path is None");
-  }
-
-  if (!destinationFilepath) {
-    throw new Error("destination path is None");
-  }
-
-  if (!fs.existsSync(sourceFilepath)) {
-    throw new Error(`sourcePath: ${sourceFilepath} Doesn't Exist`);
-  }
-
-  fs.copyFileSync(sourceFilepath, destinationFilepath);
 }
 
 module.exports = {
@@ -266,5 +295,4 @@ module.exports = {
   ROCrate,
   readROCrateMetadata,
   appendCrate,
-  copyToROCrate,
 };

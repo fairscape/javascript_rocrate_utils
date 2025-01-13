@@ -10,7 +10,7 @@ import {
 import { generateSoftware } from "../models/software";
 import { generateDataset } from "../models/dataset";
 import { generateComputation } from "../models/computation";
-import { generateSchema } from "../models/schema"; // Assume this is implemented similarly to generateDataset
+import { generateSchema } from "../models/schema";
 
 export function get_ro_crate_metadata(rocratePath) {
   const metadataPath = path.join(rocratePath, "ro-crate-metadata.json");
