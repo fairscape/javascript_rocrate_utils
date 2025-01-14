@@ -23,6 +23,7 @@ function generateROCrate({
   organizationName = null,
   projectName = null,
   packageType = null,
+  license = "https://creativecommons.org/licenses/by/4.0/",
 }) {
   if (!name) {
     throw new Error("Name is required for ROCrate generation");
@@ -41,6 +42,7 @@ function generateROCrate({
     keywords: keywords,
     description: description,
     author: author,
+    license: license,
   };
 
   // Add packageType to the root dataset if provided
@@ -112,7 +114,8 @@ class ROCrate {
     keywords,
     projectName = null,
     organizationName = null,
-    path
+    path,
+    license = "https://creativecommons.org/licenses/by/4.0/"
   ) {
     this.guid = null;
     this.name = name;
@@ -122,6 +125,7 @@ class ROCrate {
     this.projectName = projectName;
     this.organizationName = organizationName;
     this.path = path;
+    this.license = license;
   }
 
   generateGuid() {
@@ -149,6 +153,7 @@ class ROCrate {
       name: this.name,
       description: this.description,
       keywords: this.keywords,
+      license: this.license,
     };
 
     // Add organization and project if specified
@@ -159,8 +164,6 @@ class ROCrate {
         .replace(" ", "-")}-${generateDatetimeSquid()}`;
       isPartOf.push({
         "@id": organizationGuid,
-        "@type": "Organization",
-        name: this.organizationName,
       });
     }
 
@@ -170,8 +173,6 @@ class ROCrate {
         .replace(" ", "-")}-${generateDatetimeSquid()}`;
       isPartOf.push({
         "@id": projectGuid,
-        "@type": "Project",
-        name: this.projectName,
       });
     }
 

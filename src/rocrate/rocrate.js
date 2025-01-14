@@ -128,7 +128,8 @@ function rocrate_create(
   author,
   keywords,
   packageType,
-  guid = ""
+  guid = "",
+  license = "https://creativecommons.org/licenses/by/4.0/"
 ) {
   const passed_crate = generateROCrate({
     path: rocrate_path,
@@ -140,6 +141,7 @@ function rocrate_create(
     author,
     keywords,
     packageType,
+    license,
   });
   return passed_crate["@id"];
 }
