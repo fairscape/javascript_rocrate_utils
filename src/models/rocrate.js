@@ -70,7 +70,9 @@ function generateROCrate({
       "@id": projectGUID,
     });
   }
-
+  console.log("Organization GUID:", organizationGUID);
+  console.log("Project GUID:", projectGUID);
+  console.log("isPartOf array:", isPartOf);
   if (isPartOf.length > 0) {
     rootDataset.isPartOf = isPartOf;
   }

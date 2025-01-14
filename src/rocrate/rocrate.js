@@ -136,7 +136,7 @@ function rocrate_create(
     guid,
     name,
     organizationGUID: organization_guid,
-    projectName: project_guid,
+    projectGUID: project_guid,
     description,
     author,
     keywords,
