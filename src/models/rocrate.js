@@ -25,8 +25,8 @@ function generateROCrate({
   description,
   author,
   keywords,
-  organizationName = null,
-  projectName = null,
+  organizationGUID = null,
+  projectGUID = null,
   packageType = null,
   license = "https://creativecommons.org/licenses/by/4.0/",
   datePublished = getTodayDate(),
@@ -59,21 +59,15 @@ function generateROCrate({
 
   // Create organization and project entities if needed
   const isPartOf = [];
-  if (organizationName) {
-    const organizationGuid = `ark:${NAAN}/organization-${organizationName
-      .toLowerCase()
-      .replace(" ", "-")}-${generateDatetimeSquid()}`;
+  if (organizationGUID) {
     isPartOf.push({
-      "@id": organizationGuid,
+      "@id": organizationGUID,
     });
   }
 
-  if (projectName) {
-    const projectGuid = `ark:${NAAN}/project-${projectName
-      .toLowerCase()
-      .replace(" ", "-")}-${generateDatetimeSquid()}`;
+  if (projectGUID) {
     isPartOf.push({
-      "@id": projectGuid,
+      "@id": projectGUID,
     });
   }
 
@@ -119,8 +113,8 @@ class ROCrate {
     description,
     author,
     keywords,
-    projectName = null,
-    organizationName = null,
+    projectGUID = null,
+    organizationGUID = null,
     path,
     license = "https://creativecommons.org/licenses/by/4.0/",
     datePublished = getTodayDate()
@@ -130,8 +124,8 @@ class ROCrate {
     this.description = description;
     this.author = author;
     this.keywords = keywords;
-    this.projectName = projectName;
-    this.organizationName = organizationName;
+    this.projectGUID = projectGUID;
+    this.organizationGUID = organizationGUID;
     this.path = path;
     this.license = license;
     this.datePublished = datePublished;
@@ -168,25 +162,15 @@ class ROCrate {
 
     // Add organization and project if specified
     const isPartOf = [];
-    if (this.organizationName) {
-      const organizationGuid = `ark:${NAAN}/organization-${this.organizationName
-        .toLowerCase()
-        .replace(" ", "-")}-${generateDatetimeSquid()}`;
+    if (this.organizationGUID) {
       isPartOf.push({
-        "@id": organizationGuid,
-        "@type": "Organization",
-        name: this.organizationName,
+        "@id": organizationGUID,
       });
     }
 
-    if (this.projectName) {
-      const projectGuid = `ark:${NAAN}/project-${this.projectName
-        .toLowerCase()
-        .replace(" ", "-")}-${generateDatetimeSquid()}`;
+    if (this.projectGUID) {
       isPartOf.push({
-        "@id": projectGuid,
-        "@type": "Project",
-        name: this.projectName,
+        "@id": projectGUID,
       });
     }
 
