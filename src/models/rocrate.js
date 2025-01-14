@@ -4,7 +4,6 @@ const { v4: uuidv4 } = require("uuid");
 
 const DEFAULT_CONTEXT = {
   "@vocab": "https://schema.org/",
-  sh: "http://www.w3.org/ns/shacl#",
   EVI: "https://w3id.org/EVI#",
 };
 
@@ -57,8 +56,6 @@ function generateROCrate({
       .replace(" ", "-")}-${generateDatetimeSquid()}`;
     isPartOf.push({
       "@id": organizationGuid,
-      "@type": "Organization",
-      name: organizationName,
     });
   }
 
@@ -68,8 +65,6 @@ function generateROCrate({
       .replace(" ", "-")}-${generateDatetimeSquid()}`;
     isPartOf.push({
       "@id": projectGuid,
-      "@type": "Project",
-      name: projectName,
     });
   }
 
