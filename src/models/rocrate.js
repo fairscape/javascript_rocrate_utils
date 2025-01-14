@@ -13,6 +13,11 @@ function generateDatetimeSquid() {
   return uuidv4().split("-")[0];
 }
 
+function getTodayDate() {
+  const today = new Date();
+  return today.toISOString().split("T")[0];
+}
+
 function generateROCrate({
   path: cratePath,
   guid,
@@ -24,6 +29,7 @@ function generateROCrate({
   projectName = null,
   packageType = null,
   license = "https://creativecommons.org/licenses/by/4.0/",
+  datePublished = getTodayDate(),
 }) {
   if (!name) {
     throw new Error("Name is required for ROCrate generation");
@@ -31,7 +37,7 @@ function generateROCrate({
 
   if (!guid) {
     const sq = generateDatetimeSquid();
-    guid = `ark:${NAAN}/rocrate-${name.toLowerCase().replace(" ", "-")}-${sq}`;
+    guid = `ark:${NAAN}/rocrate-${name.toLowerCase().replace(" ", "-")}-${sq}/`;
   }
 
   // Create the root dataset entity
@@ -43,6 +49,7 @@ function generateROCrate({
     description: description,
     author: author,
     license: license,
+    datePublished: datePublished,
   };
 
   // Add packageType to the root dataset if provided
@@ -115,7 +122,8 @@ class ROCrate {
     projectName = null,
     organizationName = null,
     path,
-    license = "https://creativecommons.org/licenses/by/4.0/"
+    license = "https://creativecommons.org/licenses/by/4.0/",
+    datePublished = getTodayDate()
   ) {
     this.guid = null;
     this.name = name;
@@ -126,6 +134,7 @@ class ROCrate {
     this.organizationName = organizationName;
     this.path = path;
     this.license = license;
+    this.datePublished = datePublished;
   }
 
   generateGuid() {
@@ -154,6 +163,7 @@ class ROCrate {
       description: this.description,
       keywords: this.keywords,
       license: this.license,
+      datePublished: this.datePublished,
     };
 
     // Add organization and project if specified
@@ -164,6 +174,8 @@ class ROCrate {
         .replace(" ", "-")}-${generateDatetimeSquid()}`;
       isPartOf.push({
         "@id": organizationGuid,
+        "@type": "Organization",
+        name: this.organizationName,
       });
     }
 
@@ -173,6 +185,8 @@ class ROCrate {
         .replace(" ", "-")}-${generateDatetimeSquid()}`;
       isPartOf.push({
         "@id": projectGuid,
+        "@type": "Project",
+        name: this.projectName,
       });
     }
 
@@ -204,18 +218,14 @@ class ROCrate {
     const metadataPath = path.join(this.path, "ro-crate-metadata.json");
     const roCrateMetadata = JSON.parse(fs.readFileSync(metadataPath, "utf8"));
 
-    // Add the new entity to the graph
     roCrateMetadata["@graph"].push(model);
 
-    // Find the root dataset (second element in @graph after metadata descriptor)
     const rootDataset = roCrateMetadata["@graph"][1];
 
-    // Initialize hasPart if it doesn't exist
     if (!rootDataset.hasPart) {
       rootDataset.hasPart = [];
     }
 
-    // Add reference to the new entity
     rootDataset.hasPart.push({ "@id": model["@id"] });
 
     fs.writeFileSync(metadataPath, JSON.stringify(roCrateMetadata, null, 2));
@@ -271,15 +281,13 @@ function appendCrate(cratePath, elements) {
   // Find the root dataset (second element in @graph after metadata descriptor)
   const rootDataset = roCrateMetadata["@graph"][1];
 
-  // Initialize hasPart if it doesn't exist
+  // Initialize hasPart and append new element
   if (!rootDataset.hasPart) {
     rootDataset.hasPart = [];
   }
 
   elements.forEach((element) => {
-    // Add the element to the graph
     roCrateMetadata["@graph"].push(element);
-    // Add reference to the element in root dataset's hasPart
     rootDataset.hasPart.push({ "@id": element["@id"] });
   });
 
