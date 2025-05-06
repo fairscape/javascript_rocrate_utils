@@ -129,8 +129,14 @@ function rocrate_create(
   keywords,
   packageType,
   guid = "",
-  license = "https://creativecommons.org/licenses/by/4.0/"
+  license = "https://creativecommons.org/licenses/by/4.0/",
+  version = "1.0.0"
 ) {
+  // Check if keywords is a string and convert to array if needed
+  if (typeof keywords === "string") {
+    keywords = keywords.split(",").map((keyword) => keyword.trim());
+  }
+
   const passed_crate = generateROCrate({
     path: rocrate_path,
     guid,
@@ -140,6 +146,7 @@ function rocrate_create(
     description,
     author,
     keywords,
+    version,
     packageType,
     license,
   });
@@ -203,7 +210,8 @@ function register_dataset(
   derived_from = [],
   schema = null,
   associated_publication = null,
-  additional_documentation = null
+  additional_documentation = null,
+  generatedBy = null
 ) {
   try {
     const crate_instance = readROCrateMetadata(rocrate_path);
@@ -221,6 +229,7 @@ function register_dataset(
       dataFormat: data_format,
       schema,
       derivedFrom: derived_from,
+      generatedBy: generatedBy,
       usedBy: used_by,
       filepath,
       cratePath: rocrate_path,

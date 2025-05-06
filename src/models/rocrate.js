@@ -25,6 +25,7 @@ function generateROCrate({
   description,
   author,
   keywords,
+  version = "1.0.0",
   organizationGUID = null,
   projectGUID = null,
   packageType = null,
@@ -50,6 +51,7 @@ function generateROCrate({
     author: author,
     license: license,
     datePublished: datePublished,
+    version: version,
   };
 
   // Add packageType to the root dataset if provided

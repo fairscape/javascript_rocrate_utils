@@ -46,10 +46,16 @@ function generateDataset({
   usedBy,
   filepath,
   cratePath,
+  generatedBy,
 }) {
   if (!guid) {
     const sq = generateDatetimeSquid();
     guid = `ark:${NAAN}/dataset-${name.toLowerCase().replace(" ", "-")}-${sq}`;
+  }
+
+  // Format generatedBy properly if it's a string
+  if (typeof generatedBy === "string") {
+    generatedBy = { "@id": generatedBy };
   }
 
   const datasetMetadata = {
@@ -74,6 +80,7 @@ function generateDataset({
       typeof usedBy === "string"
         ? usedBy.split(",").map((item) => item.trim())
         : [],
+    generatedBy: generatedBy,
   };
 
   if (filepath) {
@@ -84,7 +91,9 @@ function generateDataset({
       const rocratePath = cratePath.includes("ro-crate-metadata.json")
         ? path.dirname(cratePath)
         : cratePath;
+      console.log("rocratePath", rocratePath);
       const datasetPath = path.resolve(filepath);
+      console.log("datasetPath", datasetPath);
       if (fs.existsSync(datasetPath)) {
         try {
           const relativePath = path.relative(rocratePath, datasetPath);
@@ -100,7 +109,6 @@ function generateDataset({
       }
     }
   }
-
   return datasetMetadata;
 }
 
